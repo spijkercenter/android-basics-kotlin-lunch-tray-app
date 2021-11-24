@@ -20,7 +20,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.example.lunchtray.R
 import com.example.lunchtray.databinding.FragmentStartOrderBinding
+import com.example.lunchtray.navigate
 
 /**
  * [StartOrderFragment] allows people to click the start button to start an order.
@@ -45,7 +47,8 @@ class StartOrderFragment : Fragment() {
         val root: View = binding.root
         // Navigate to entree menu
         binding.startOrderBtn.setOnClickListener {
-            // TODO: navigate to the EntreeMenuFragment
+            // navigate to the EntreeMenuFragment
+            navigate(R.id.action_startOrderFragment_to_entreeMenuFragment)
         }
         return root
     }

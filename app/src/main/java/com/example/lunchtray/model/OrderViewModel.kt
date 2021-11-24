@@ -21,6 +21,8 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.example.lunchtray.data.DataSource
 import java.text.NumberFormat
+import java.util.*
+import kotlin.reflect.KMutableProperty0
 
 class OrderViewModel : ViewModel() {
 
@@ -50,87 +52,90 @@ class OrderViewModel : ViewModel() {
     // Subtotal for the order
     private val _subtotal = MutableLiveData(0.0)
     val subtotal: LiveData<String> = Transformations.map(_subtotal) {
-        NumberFormat.getCurrencyInstance().format(it)
+        NumberFormat.getCurrencyInstance(Locale.US).format(it)
     }
 
     // Total cost of the order
     private val _total = MutableLiveData(0.0)
     val total: LiveData<String> = Transformations.map(_total) {
-        NumberFormat.getCurrencyInstance().format(it)
+        NumberFormat.getCurrencyInstance(Locale.US).format(it)
     }
 
     // Tax for the order
     private val _tax = MutableLiveData(0.0)
     val tax: LiveData<String> = Transformations.map(_tax) {
-        NumberFormat.getCurrencyInstance().format(it)
+        NumberFormat.getCurrencyInstance(Locale.US).format(it)
     }
 
     /**
      * Set the entree for the order.
      */
-    fun setEntree(entree: String) {
-        // TODO: if _entree.value is not null, set the previous entree price to the current
-        //  entree price.
+    fun setEntree(entree: String) =
+        this.set(entree, _entree, this::previousEntreePrice)
 
-        // TODO: if _subtotal.value is not null subtract the previous entree price from the current
-        //  subtotal value. This ensures that we only charge for the currently selected entree.
-
-        // TODO: set the current entree value to the menu item corresponding to the passed in string
-        // TODO: update the subtotal to reflect the price of the selected entree.
-    }
 
     /**
      * Set the side for the order.
      */
-    fun setSide(side: String) {
-        // TODO: if _side.value is not null, set the previous side price to the current side price.
-
-        // TODO: if _subtotal.value is not null subtract the previous side price from the current
-        //  subtotal value. This ensures that we only charge for the currently selected side.
-
-        // TODO: set the current side value to the menu item corresponding to the passed in string
-        // TODO: update the subtotal to reflect the price of the selected side.
-    }
+    fun setSide(side: String) =
+        this.set(side, _side, this::previousSidePrice)
 
     /**
      * Set the accompaniment for the order.
      */
-    fun setAccompaniment(accompaniment: String) {
-        // TODO: if _accompaniment.value is not null, set the previous accompaniment price to the
-        //  current accompaniment price.
+    fun setAccompaniment(accompaniment: String) =
+        this.set(accompaniment, _accompaniment, this::previousAccompanimentPrice)
 
-        // TODO: if _accompaniment.value is not null subtract the previous accompaniment price from
-        //  the current subtotal value. This ensures that we only charge for the currently selected
-        //  accompaniment.
+    private fun set(
+        meal: String,
+        prop: MutableLiveData<MenuItem?>,
+        prev: KMutableProperty0<Double>
+    ) {
+        val item = menuItems[meal]!!
 
-        // TODO: set the current accompaniment value to the menu item corresponding to the passed in
-        //  string
-        // TODO: update the subtotal to reflect the price of the selected accompaniment.
+        prop.value?.let { prev.set(it.price) }
+
+        _subtotal.value = _subtotal.value?.let { it - prev.get() }
+
+        prop.value = item
+        updateSubtotal(item.price)
     }
 
     /**
      * Update subtotal value.
      */
     private fun updateSubtotal(itemPrice: Double) {
-        // TODO: if _subtotal.value is not null, update it to reflect the price of the recently
+        // if _subtotal.value is not null, update it to reflect the price of the recently
         //  added item.
         //  Otherwise, set _subtotal.value to equal the price of the item.
+        _subtotal.value = (_subtotal.value ?: 0.0) + itemPrice
 
-        // TODO: calculate the tax and resulting total
+        // calculate the tax and resulting total
+        calculateTaxAndTotal()
     }
 
     /**
      * Calculate tax and update total.
      */
     fun calculateTaxAndTotal() {
-        // TODO: set _tax.value based on the subtotal and the tax rate.
-        // TODO: set the total based on the subtotal and _tax.value.
+        val subTotal = _subtotal.value ?: 0.0
+        val tax = subTotal * taxRate
+        // set _tax.value based on the subtotal and the tax rate.
+        _tax.value = tax
+        // set the total based on the subtotal and _tax.value.
+        _total.value = subTotal + tax
     }
 
     /**
      * Reset all values pertaining to the order.
      */
     fun resetOrder() {
-        // TODO: Reset all values associated with an order
+        // Reset all values associated with an order
+        _entree.value = null
+        _side.value = null
+        _accompaniment.value = null
+        _subtotal.value = 0.0
+        _tax.value = 0.0
+        _total.value = 0.0
     }
 }
